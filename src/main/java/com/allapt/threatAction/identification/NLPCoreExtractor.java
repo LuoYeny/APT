@@ -5,6 +5,7 @@
  */        
 package com.allapt.threatAction.identification;
 
+import com.allapt.nlp.preProcess.Action;
 import edu.stanford.nlp.ling.CoreAnnotations;
 import edu.stanford.nlp.ling.CoreAnnotations.SentencesAnnotation;
 import edu.stanford.nlp.ling.CoreAnnotations.TextAnnotation;
@@ -21,10 +22,7 @@ import edu.stanford.nlp.util.CoreMap;
 import java.io.BufferedWriter;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
-import java.util.Properties;
+import java.util.*;
 
 /**
  *
@@ -75,166 +73,201 @@ public class NLPCoreExtractor {
 
     private void parseSVO(CoreMap sentence, List<SemanticGraphEdge> allEdge
             , List<String> fSentences) {
-        String nsubj = "", dobj = "", verb = "", det = "", aux = "", auxpass = ""
+        String nsubj = "", obj="", dobj = "", verb = "", det = "", aux = "", auxpass = ""
                 , mark = "", advmod = "", case1 = "", amod = "", nmod = "", acl = ""
                 , previous = "", aclDobj = "", compound = "";
         IndexedWord word;
         String fs = "";
         boolean bnsubj = false, bdobj = false, bnmod = false, bacl = false;
-        for(SemanticGraphEdge edge : allEdge) {
-            switch(edge.getRelation().getShortName().trim()) {
-                case "nsubj":
-                    if(!nsubj.isEmpty()) {
-                        fs = nsubj +  (nsubj.isEmpty()? "": " ") + verb
-                                +  (verb.isEmpty()? "": " ") + dobj + (dobj.isEmpty()? "": " ")
-                                + nmod + (nmod.isEmpty()? "": " ") + acl + (acl.isEmpty()? "": " ") + aclDobj;
-                        System.out.println("Sentence:" + fs);
-                        if(!fs.trim().isEmpty()) {
-                            fSentences.add(fs.trim());
-                        }
-                        mark = aux = auxpass = dobj = nsubj = nmod = acl = case1 = det = amod = advmod = compound = "";
-                    }
-                    nsubj = edge.getTarget().word().trim();
-                    verb = edge.getSource().word().trim();
-                    bnsubj = true;
-                    break;
-             /*   case "conj":
-                    if(bnsubj) {
-                        nsubj = case1 + " " + det + " " + amod + " " + advmod + " " + compound + " "   + nsubj;
-                        case1 = det = amod = advmod = compound = "";
-                        bnsubj = false;
-                    } else if(bdobj) {
-                        dobj = case1 + " " + det + " " + amod + " " + advmod + " " + compound + " "   + dobj;
-                        case1 = det = amod = advmod = compound = "";
-                        bdobj = false;
-                    } else if(bacl) {
-                        aclDobj = case1 + " " + det + " " + amod + " " + advmod + " " + compound + " "   + aclDobj;
-                        case1 = det = amod = advmod = compound = "";
-                        bacl = false;
-                    } else if(bnmod) {
-                        nmod = case1 + " " + det + " " + amod + " " + advmod + " " + nmod;
-                        case1 = det = amod = advmod = "";
-                        bacl = false;
-                    }
-                    if(getThePOS(sentence, edge.getSource().word().trim()).equalsIgnoreCase("VB")
-                                && getThePOS(sentence, edge.getTarget().word().trim()).equalsIgnoreCase("VB")) {
+        System.out.println("befor loop");
 
-                        fs = nsubj +  (nsubj.isEmpty()? "": " ") + verb +  (verb.isEmpty()? "": " ") + dobj
-                                + (dobj.isEmpty()? "": " ") + nmod + (nmod.isEmpty()? "": " ")
-                                + acl + (acl.isEmpty()? "": " ") + aclDobj;
-                        System.out.println("Sentence:" + fs);
-                        if(!fs.trim().isEmpty()) {
-                            fSentences.add(fs.trim());
-                        }
-                        verb = edge.getTarget().word().trim();
-                        mark = aux = auxpass = dobj = nsubj = nmod = acl = case1 = det = amod = advmod = compound = "";
-                    }
-                    break;*/
+        List<com.allapt.nlp.preProcess.Action> list = new LinkedList<>();
+        for(SemanticGraphEdge edge : allEdge){
+            String relation=edge.getRelation().getShortName().trim();
+            if(relation.contains("nsubj")){
+                nsubj = edge.getTarget().word().trim();
 
-                case "dobj":
-                    if(bacl) {
-                        aclDobj = edge.getTarget().word().trim();
-                    } else {
-                        dobj = edge.getTarget().word().trim();
-                        verb = getThePOS(sentence, edge.getSource().word().trim()).equalsIgnoreCase("VB")? edge.getSource().word().trim() : verb;
-                        if(bnsubj) {
-                            nsubj = case1 + " " + det + " " + amod + " " + advmod + " " + compound + " " + nsubj;
-                            case1 = det = amod = advmod = compound = "";
-                            bnsubj = false;
-                        } else if(bnmod) {
-                            nmod = case1 + " " + det + " " + amod + " " + advmod + " " + nmod;
-                            case1 = det = amod = advmod = "";
-                            bnmod = false;
-                        }
-                        bdobj = true;
-                        verb = edge.getSource().word().trim();
-                        System.out.println("Ghaith NLP" + verb +" "+dobj);
-                    }
-                    break;
-    /*            case "nsubjpass":
-                    nsubj = edge.getTarget().word().trim();
-                    verb = edge.getSource().word().trim();
-                    break;*/
-                case "compound":
-                    compound = edge.getTarget().word().trim();
-                    break;
-             /*   case "aux":
-                    aux = edge.getTarget().word().trim();
-                    break;
-                case "auxpass":
-                    auxpass = edge.getTarget().word().trim();
-                    break;*/
-           /*     case "case":
-                    case1 =  edge.getTarget().word().trim();
-                    break;
-                case "det":
-//                    det =  edge.getTarget().word().trim();
-                    break;
-                case "advmod":
-                    advmod = (getThePOS(sentence, edge.getTarget().word().trim()).equalsIgnoreCase("WRB")
-                            || getThePOS(sentence, edge.getTarget().word().trim()).equalsIgnoreCase("RB"))? "" : edge.getTarget().word().trim();
-                    break;
-                case "amod":
-                    amod =  getThePOS(sentence, edge.getTarget().word().trim()).equalsIgnoreCase("VBG")? "" : edge.getTarget().word().trim();
-                    break;
-                case "nmod":
-                    nmod = edge.getTarget().word().trim();
-                    verb = getThePOS(sentence, edge.getSource().word().trim()).equalsIgnoreCase("VB")? edge.getSource().word().trim() : verb;
-                    if(bnsubj) {
-                        nsubj = case1 + " " + det + " " + amod + " " + advmod + " " + compound + " " + nsubj;
-                        case1 = det = amod = advmod = compound = "";
-                        bnsubj = false;
-                    } else if(bdobj) {
-                        dobj = case1 + " " + det + " " + amod + " " + advmod + " " + compound + " " + dobj;
-                        case1 = det = amod = advmod = compound = "";
-                        bdobj = false;
-                    } else if(bacl) {
-                        aclDobj =  case1 + " " + det + " " + amod + " " + advmod + " " + compound + " " + aclDobj;
-                        case1 = det = amod = advmod = compound = "";
-                        bacl = false;
-                    }
-                    bnmod = true;
-                    break;
-                case "acl":
-                    acl = edge.getTarget().word().trim();
-                    if(bnsubj) {
-                        nsubj = case1 + " " + det + " " + amod + " " + advmod + " " + compound + " " + nsubj;
-                        case1 = det = amod = advmod = compound = "";
-                        bnsubj = false;
-                    } else if(bdobj) {
-                        dobj = case1 + " " + det + " " + amod + " " + advmod + " " + compound + " " + dobj;
-                        case1 = det = amod = advmod = compound = "";
-                        bdobj = false;
-                    } else if(bnmod) {
-                        nmod = case1 + " " + det + " " + amod + " " + advmod + " " + nmod;
-                        case1 = det = amod = advmod = "";
-                        bnmod = false;
-                    }
-                    bacl = true;
-                    break;
-                case "mark":
-                    mark = edge.getTarget().word().trim();
-                    break;*/
-                case "default":
-                    break;
+                //
             }
-        }
+            if(relation.contains("obj")){
+                verb = edge.getSource().word().trim();
+                obj=edge.getTarget().word().trim();
+                com.allapt.nlp.preProcess.Action action = new com.allapt.nlp.preProcess.Action();
+                action.setNsubj(nsubj);
+                action.setObj(obj);
+                action.setVerb(verb);
+                list.add(action);
 
-        if(bnsubj) {
-            nsubj = case1 + " " + det + " " + amod + " " + advmod + " " + compound+  " " + nsubj;
-        } else if(bdobj) {
-            dobj = case1 + " " + det + " " + amod + " " + advmod + " " + compound + " " + dobj;
-        } else if(bacl) {
-            aclDobj = case1 + " " + det + " " + amod + " " + advmod + " " + compound + " " + aclDobj;
-        } else if(bnmod) {
-            nmod = case1 + " " + det + " " + amod + " " + advmod + " " + nmod;
+            }
+            if(relation.contains("compound")){
+                if(edge.getSource().word().trim().equals(obj)
+                        &&edge.getSource().word().trim().
+                        equals(list.get(list.size()-1).getObj())){
+                    com.allapt.nlp.preProcess.Action action =list.get(list.size()-1);
+                    action.setCompound(edge.getTarget().word().trim());
+
+                }
+
+            }
+
         }
-        fs = nsubj +  (nsubj.isEmpty()? "": " ") + verb +  (verb.isEmpty()? "": " ") + dobj + (dobj.isEmpty()? "": " ")
-                + nmod + (nmod.isEmpty()? "": " ") + acl + (acl.isEmpty()? "": " ") + aclDobj;
-        System.out.println("Sentence:" + fs);
-        if(!fs.trim().isEmpty()) {
-            fSentences.add(fs.trim());
-        }
+        System.out.println("list   "+list);
+        for(Action action:list)
+            fSentences.add(action.toString());
+//        for(SemanticGraphEdge edge : allEdge) {
+//            switch(edge.getRelation().getShortName().trim()) {
+//                case "nsubj":
+//                    if(!nsubj.isEmpty()) {
+//                        fs = nsubj +  (nsubj.isEmpty()? "": " ") + verb
+//                                +  (verb.isEmpty()? "": " ") + dobj + (dobj.isEmpty()? "": " ")
+//                                + nmod + (nmod.isEmpty()? "": " ") + acl + (acl.isEmpty()? "": " ") + aclDobj;
+//                        System.out.println("Sentence:" + fs);
+//                        if(!fs.trim().isEmpty()) {
+//                            fSentences.add(fs.trim());
+//                        }
+//                        mark = aux = auxpass = dobj = nsubj = nmod = acl = case1 = det = amod = advmod = compound = "";
+//                    }
+//                    nsubj = edge.getTarget().word().trim();
+//                    verb = edge.getSource().word().trim();
+//                    bnsubj = true;
+//                    break;
+//             /*   case "conj":
+//                    if(bnsubj) {
+//                        nsubj = case1 + " " + det + " " + amod + " " + advmod + " " + compound + " "   + nsubj;
+//                        case1 = det = amod = advmod = compound = "";
+//                        bnsubj = false;
+//                    } else if(bdobj) {
+//                        dobj = case1 + " " + det + " " + amod + " " + advmod + " " + compound + " "   + dobj;
+//                        case1 = det = amod = advmod = compound = "";
+//                        bdobj = false;
+//                    } else if(bacl) {
+//                        aclDobj = case1 + " " + det + " " + amod + " " + advmod + " " + compound + " "   + aclDobj;
+//                        case1 = det = amod = advmod = compound = "";
+//                        bacl = false;
+//                    } else if(bnmod) {
+//                        nmod = case1 + " " + det + " " + amod + " " + advmod + " " + nmod;
+//                        case1 = det = amod = advmod = "";
+//                        bacl = false;
+//                    }
+//                    if(getThePOS(sentence, edge.getSource().word().trim()).equalsIgnoreCase("VB")
+//                                && getThePOS(sentence, edge.getTarget().word().trim()).equalsIgnoreCase("VB")) {
+//
+//                        fs = nsubj +  (nsubj.isEmpty()? "": " ") + verb +  (verb.isEmpty()? "": " ") + dobj
+//                                + (dobj.isEmpty()? "": " ") + nmod + (nmod.isEmpty()? "": " ")
+//                                + acl + (acl.isEmpty()? "": " ") + aclDobj;
+//                        System.out.println("Sentence:" + fs);
+//                        if(!fs.trim().isEmpty()) {
+//                            fSentences.add(fs.trim());
+//                        }
+//                        verb = edge.getTarget().word().trim();
+//                        mark = aux = auxpass = dobj = nsubj = nmod = acl = case1 = det = amod = advmod = compound = "";
+//                    }
+//                    break;*/
+//
+//                case "dobj":
+//                    if(bacl) {
+//                        aclDobj = edge.getTarget().word().trim();
+//                    } else {
+//                        dobj = edge.getTarget().word().trim();
+//                        verb = getThePOS(sentence, edge.getSource().word().trim()).equalsIgnoreCase("VB")? edge.getSource().word().trim() : verb;
+//                        if(bnsubj) {
+//                            nsubj = case1 + " " + det + " " + amod + " " + advmod + " " + compound + " " + nsubj;
+//                            case1 = det = amod = advmod = compound = "";
+//                            bnsubj = false;
+//                        } else if(bnmod) {
+//                            nmod = case1 + " " + det + " " + amod + " " + advmod + " " + nmod;
+//                            case1 = det = amod = advmod = "";
+//                            bnmod = false;
+//                        }
+//                        bdobj = true;
+//                        verb = edge.getSource().word().trim();
+//                        System.out.println("Ghaith NLP" + verb +" "+dobj);
+//                    }
+//                    break;
+//    /*            case "nsubjpass":
+//                    nsubj = edge.getTarget().word().trim();
+//                    verb = edge.getSource().word().trim();
+//                    break;*/
+//                case "compound":
+//                    compound = edge.getTarget().word().trim();
+//                    break;
+//             /*   case "aux":
+//                    aux = edge.getTarget().word().trim();
+//                    break;
+//                case "auxpass":
+//                    auxpass = edge.getTarget().word().trim();
+//                    break;*/
+//           /*     case "case":
+//                    case1 =  edge.getTarget().word().trim();
+//                    break;
+//                case "det":
+////                    det =  edge.getTarget().word().trim();
+//                    break;
+//                case "advmod":
+//                    advmod = (getThePOS(sentence, edge.getTarget().word().trim()).equalsIgnoreCase("WRB")
+//                            || getThePOS(sentence, edge.getTarget().word().trim()).equalsIgnoreCase("RB"))? "" : edge.getTarget().word().trim();
+//                    break;
+//                case "amod":
+//                    amod =  getThePOS(sentence, edge.getTarget().word().trim()).equalsIgnoreCase("VBG")? "" : edge.getTarget().word().trim();
+//                    break;
+//                case "nmod":
+//                    nmod = edge.getTarget().word().trim();
+//                    verb = getThePOS(sentence, edge.getSource().word().trim()).equalsIgnoreCase("VB")? edge.getSource().word().trim() : verb;
+//                    if(bnsubj) {
+//                        nsubj = case1 + " " + det + " " + amod + " " + advmod + " " + compound + " " + nsubj;
+//                        case1 = det = amod = advmod = compound = "";
+//                        bnsubj = false;
+//                    } else if(bdobj) {
+//                        dobj = case1 + " " + det + " " + amod + " " + advmod + " " + compound + " " + dobj;
+//                        case1 = det = amod = advmod = compound = "";
+//                        bdobj = false;
+//                    } else if(bacl) {
+//                        aclDobj =  case1 + " " + det + " " + amod + " " + advmod + " " + compound + " " + aclDobj;
+//                        case1 = det = amod = advmod = compound = "";
+//                        bacl = false;
+//                    }
+//                    bnmod = true;
+//                    break;
+//                case "acl":
+//                    acl = edge.getTarget().word().trim();
+//                    if(bnsubj) {
+//                        nsubj = case1 + " " + det + " " + amod + " " + advmod + " " + compound + " " + nsubj;
+//                        case1 = det = amod = advmod = compound = "";
+//                        bnsubj = false;
+//                    } else if(bdobj) {
+//                        dobj = case1 + " " + det + " " + amod + " " + advmod + " " + compound + " " + dobj;
+//                        case1 = det = amod = advmod = compound = "";
+//                        bdobj = false;
+//                    } else if(bnmod) {
+//                        nmod = case1 + " " + det + " " + amod + " " + advmod + " " + nmod;
+//                        case1 = det = amod = advmod = "";
+//                        bnmod = false;
+//                    }
+//                    bacl = true;
+//                    break;
+//                case "mark":
+//                    mark = edge.getTarget().word().trim();
+//                    break;*/
+//                case "default":
+//                    break;
+//            }
+//        }
+//
+//        if(bnsubj) {
+//            nsubj = case1 + " " + det + " " + amod + " " + advmod + " " + compound+  " " + nsubj;
+//        } else if(bdobj) {
+//            dobj = case1 + " " + det + " " + amod + " " + advmod + " " + compound + " " + dobj;
+//        } else if(bacl) {
+//            aclDobj = case1 + " " + det + " " + amod + " " + advmod + " " + compound + " " + aclDobj;
+//        } else if(bnmod) {
+//            nmod = case1 + " " + det + " " + amod + " " + advmod + " " + nmod;
+//        }
+//        fs = nsubj +  (nsubj.isEmpty()? "": " ") + verb +  (verb.isEmpty()? "": " ") + dobj + (dobj.isEmpty()? "": " ")
+//                + nmod + (nmod.isEmpty()? "": " ") + acl + (acl.isEmpty()? "": " ") + aclDobj;
+//        System.out.println("Sentence:" + fs);
+//        if(!fs.trim().isEmpty()) {
+//            fSentences.add(fs.trim());
+//        }
     }
     
     private void treeTraversalDFS(SemanticGraph dependencies, IndexedWord word, List<SemanticGraphEdge> allEdgeList) {

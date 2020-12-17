@@ -151,36 +151,23 @@ public class OntologyParser implements Comparator<Double>{
 //			    System.out.println("use_nlp_to_load -- text before nlp" + text);
 				text = Utilities.removeStopWords(text);
 
-				TTPExtractor ex = new TTPExtractor(text);
-			System.out.println("ex.getVoDoc()  "+ex.getVoDoc());
-			System.out.println("ex.getG1Doc()  "+ex.getG1Doc());
-			System.out.println("ex.getG2Doc()  "+ex.getG2Doc());
+			//	TTPExtractor ex = new TTPExtractor(text);
+				String [] strings =text.split(" ");
 
 				Document_Terms TA = new Document_Terms();
-				Document_Terms G1 = new Document_Terms();
-		    	Document_Terms G2 = new Document_Terms();
+
 
 //		    	System.out.println(++counter+","+ sent);
 //		    	System.out.println("start="+start + " ,end="+end );
-			      for(String word: ex.getVoDoc()) {
-			    	  if (isStemming)
-			    		  word = Utilities.stem(word,false);
+		for (int i = 0; i < strings.length; i++) {
+			String word =strings[i];
+			if (isStemming)
+				word = Utilities.stem(word,false);
 
-			    	  if (!word.equalsIgnoreCase(Constants.blank))
-			    		    TA.Add_Term_(word);
-			      }
-			      for(String word: ex.getG1Doc()) {
-			    	  if (isStemming)
-			    		  word = Utilities.stem(word,false);
-			    	  if (!word.equalsIgnoreCase(Constants.blank))
-			    		  G1.Add_Term_(word);
-			      }
-			      for(String word: ex.getG2Doc()) {
-			    	  if (isStemming)
-			    		  word = Utilities.stem(word,false);
-			    	  if (!word.equalsIgnoreCase(Constants.blank))
-			    		  G2.Add_Term_(word);
-			      }
+			if (!word.equalsIgnoreCase(Constants.blank))
+				TA.Add_Term_(word);
+		}
+
 			      /// start looking in the ontology
 			System.out.println("for score  ...");
 				for (Document_Terms dt: Ontology_doc_terms) {
@@ -194,23 +181,6 @@ public class OntologyParser implements Comparator<Double>{
 						tmapContent.put(dt.ID, dt.term_freq_hmap);
 						//System.out.println("TA "+TA+" dt.ID"+dt.ID+" score "+score);
 					}
-					score = TTPDrill_BM25.Calculate_BM25_Similarity_bagofwords_ankit(G1, dt, bagswords, true,
-							totalDocs, avgDocLength);
-					//System.out.println("score2  "+score);
-					if (score>0.1) {
-						tmap.put(dt.ID, score);
-						tmapContent.put(dt.ID, dt.term_freq_hmap);
-						//System.out.println("G1 "+G1+" dt.ID   "+dt.ID+" score "+score);
-					}
-					score = TTPDrill_BM25.Calculate_BM25_Similarity_bagofwords_ankit(G2, dt, bagswords, true,
-							totalDocs, avgDocLength);
-					//System.out.println("score3  "+score);
-					if (score>0.1) {
-						tmap.put(dt.ID, score);
-						tmapContent.put(dt.ID, dt.term_freq_hmap);
-						//System.out.println("G2 "+G2+" dt.ID"+dt.ID+" score "+score);
-					}
-					//System.out.println(tmap);
 					}
 				printResults(counter, sent, text, tmap, tmapContent);
 		}
