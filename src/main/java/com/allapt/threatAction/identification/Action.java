@@ -39,6 +39,6 @@ public class Action {
 
     @Override
     public String toString() {
-        return nsubj + " " + " "+verb + " " + compound +" "+obj ;
+        return nsubj + " " +verb + " " + (compound==""?"":(compound+ " "))+obj;
     }
 }
