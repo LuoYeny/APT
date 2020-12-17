@@ -1,0 +1,19 @@
+Earlier in February we blogged about RARSTONE, a Remote Access Tool (RAT) that we discovered having some similar characteristics to PlugX, an older and more well-known RAT. In April, the same malware family used the Boston Marathon bombing as part of its social engineering bait.
+
+Since then, we’ve been looking out for further attacks using RARSTONE. We’ve seen it used in targeted attacks across Asia, hitting several industries like telecommunications, oil and gas, governments, media, and others. The said targets are located in various countries including India, Malaysia, Singapore, and Vietnam. To better identify this campaign, we are calling this Naikon, based on the common useragent strings found in related attacks (NOKIAN95/WEB).
+
+These attacks were carried out using spear-phishing attacks against the target organizations, using messages related to diplomatic discussions in the Asia-Pacific region.
+
+The spear-phishing email contains a malicious document as an attachment, which exploits CVE-2012-0158, a dated vulnerability in Windows common control. This vulnerability was also used in other targeted attacks, most recently the “Safe” campaign that compromised several government agencies, media outlets and other institutions.
+
+When the target opens the attachment, a decoy document is dropped into the system, so as to make the victim think that the decoy document is the file they opened. However, in reality, opening the attachment also triggers the dropping of BKDR_RARSTONE. The malware downloads its backdoor component from a C&C server and loads it directly into memory. This behavior makes RARSTONE difficult to detect using ordinary, file-based scanning technologies.
+
+infection-chain-rarstone
+
+What makes RARSTONE unique from PlugX – and other RATs – is its ability to get installer properties from Uninstall Registry Keys. This is so that it knows what applications are installed in the system and how to uninstall them, in the case that these applications inhibit RARSTONE’s functions. It also uses SSL to encrypt its communication with its C&C server, which not only protects that connection but also making it blend in with normal traffic.
+
+The attackers behind Naikon clearly tried to make the work of security researchers more difficult. The domains used by this campaign used either dynamic DNS domains, or used registrars with privacy protection.
+
+Targeted attacks like this are typically part of broader campaigns meant to stay under the radar and steal information from target entities. Traditional technologies like blacklisting and perimeter controls are not enough to detect or block the components of these campaigns. Instead, enterprises need to increase their visibility and control over their networks in order to identify dubious network traffic.
+
+Tools like Trend Micro Deep Discovery can help IT admins accomplish this, in the broader context of a custom defense necessary to detect intrusions in the network. Deep Security also protects users from exploits using CVE-2012-0158 via DPI rule 1004978 – MSCOMCTL.OCX RCE Vulnerability For Office Binary File (CVE-2012-0158).

