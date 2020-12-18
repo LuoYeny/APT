@@ -1,10 +1,21 @@
 package com.allapt.nlp.preProcess;
 
 public class Action {
+    private String nsubjCompound="";
     private String nsubj="";
     private String obj="";
     private String verb="";
     private String compound="";
+    private String amod="";
+
+    public String getNsubjCompound() {
+        return nsubjCompound;
+    }
+
+    public void setNsubjCompound(String nsubjCompound) {
+        this.nsubjCompound = nsubjCompound;
+    }
+
     public String getNsubj() {
         return nsubj;
     }
@@ -37,8 +48,16 @@ public class Action {
         this.compound = compound;
     }
 
+    public String getAmod() {
+        return amod;
+    }
+
+    public void setAmod(String amod) {
+        this.amod = amod;
+    }
+
     @Override
     public String toString() {
-        return nsubj + " " +verb + " " + (compound==""?"":(compound+ " "))+obj;
+        return (nsubjCompound==""?"":(nsubjCompound+ " "))+nsubj + " " +verb + " " + (amod==""?"":(amod+ " "))+ (compound==""?"":(compound+ " "))+obj;
     }
 }

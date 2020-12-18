@@ -82,6 +82,7 @@ public class NLPCoreExtractor {
 
        List<Action> list = new LinkedList<>();
         for(SemanticGraphEdge edge : allEdge){
+            System.out.println("edge-------"+edge);
             String relation=edge.getRelation().getShortName().trim();
             if(relation.contains("nsubj")){
                 nsubj = edge.getTarget().word().trim();
@@ -96,14 +97,33 @@ public class NLPCoreExtractor {
                 action.setObj(obj);
                 action.setVerb(verb);
                 list.add(action);
+                System.out.println("action-------"+action);
 
             }
+
             if(relation.contains("compound")){
+
+                if(edge.getSource().word().trim().equals(nsubj)){
+                     nsubj=edge.getTarget().word().trim()+" "+nsubj;
+
+                }
                 if(edge.getSource().word().trim().equals(obj)
                         &&edge.getSource().word().trim().
                         equals(list.get(list.size()-1).getObj())){
                      Action action =list.get(list.size()-1);
                      action.setCompound(edge.getTarget().word().trim());
+
+                }
+
+
+            }
+            if(relation.contains("amod")){
+                if(edge.getSource().word().trim().equals(obj)
+                        &&edge.getSource().word().trim().
+                        equals(list.get(list.size()-1).getObj())){
+                    Action action =list.get(list.size()-1);
+                    action.setAmod(edge.getTarget().word().trim());
+
 
                 }
 

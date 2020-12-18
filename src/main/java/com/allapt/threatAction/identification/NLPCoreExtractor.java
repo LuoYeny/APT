@@ -5,7 +5,7 @@
  */        
 package com.allapt.threatAction.identification;
 
-import com.allapt.nlp.preProcess.Action;
+
 import edu.stanford.nlp.ling.CoreAnnotations;
 import edu.stanford.nlp.ling.CoreAnnotations.SentencesAnnotation;
 import edu.stanford.nlp.ling.CoreAnnotations.TextAnnotation;
@@ -81,7 +81,7 @@ public class NLPCoreExtractor {
         boolean bnsubj = false, bdobj = false, bnmod = false, bacl = false;
         System.out.println("befor loop");
 
-        List<com.allapt.nlp.preProcess.Action> list = new LinkedList<>();
+        List<Action> list = new LinkedList<>();
         for(SemanticGraphEdge edge : allEdge){
             String relation=edge.getRelation().getShortName().trim();
             if(relation.contains("nsubj")){
@@ -92,7 +92,7 @@ public class NLPCoreExtractor {
             if(relation.contains("obj")){
                 verb = edge.getSource().word().trim();
                 obj=edge.getTarget().word().trim();
-                com.allapt.nlp.preProcess.Action action = new com.allapt.nlp.preProcess.Action();
+                Action action = new Action();
                 action.setNsubj(nsubj);
                 action.setObj(obj);
                 action.setVerb(verb);
@@ -103,7 +103,7 @@ public class NLPCoreExtractor {
                 if(edge.getSource().word().trim().equals(obj)
                         &&edge.getSource().word().trim().
                         equals(list.get(list.size()-1).getObj())){
-                    com.allapt.nlp.preProcess.Action action =list.get(list.size()-1);
+                    Action action =list.get(list.size()-1);
                     action.setCompound(edge.getTarget().word().trim());
 
                 }
@@ -112,8 +112,11 @@ public class NLPCoreExtractor {
 
         }
         System.out.println("list   "+list);
-        for(Action action:list)
+        for(Action action:list){
+            if(!fSentences.contains(action.toString()))
             fSentences.add(action.toString());
+        }
+
 //        for(SemanticGraphEdge edge : allEdge) {
 //            switch(edge.getRelation().getShortName().trim()) {
 //                case "nsubj":
