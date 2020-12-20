@@ -586,6 +586,14 @@ public class OntologyParser implements Comparator<Double>{
 		System.out.println();}
 	}
 
+
+	public void  getResult(Map map){
+
+	}
+
+
+
+
 	/**
 	 * createDocTerms
 	 */

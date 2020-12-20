@@ -20,6 +20,7 @@ public class NLPTest {
             "He sent a postcard to his sister Jane Smith. " +
             "After hearing about Joe's trip, Jane decided she might go to France one day.";
 
+    public static String text1 =      "The spear-phishing email contains a malicious document as an attachment, which exploits CVE-2012-0158, a dated vulnerability in Windows common control. This vulnerability was also used in other targeted attacks, most recently the “Safe” campaign that compromised several government agencies, media outlets and other institutions.";
 
 
 
