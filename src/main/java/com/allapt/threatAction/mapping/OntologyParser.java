@@ -33,6 +33,7 @@ public class OntologyParser implements Comparator<Double>{
 	private static ArrayList<String> resultList;
 	// directory for input files
 	private static List<Map<String,String>> resultMap;
+	private static List<List<Technique>> result;
 	// no need to change if corpus is same
 	private static HashMap ttpDrillConfigMap;
 
@@ -399,8 +400,8 @@ public class OntologyParser implements Comparator<Double>{
 		int count = 0;
 		String type = "N/A";
 		// get data from configuration table
-
-
+		Technique firstTech=null;
+		Map<String, Technique > map =new HashMap<>();
 		for(Entry<String,Double> entry: hulu) {
 			if (entry.getKey().contains("_TA"))
 				type = "TA";
@@ -410,7 +411,7 @@ public class OntologyParser implements Comparator<Double>{
 				type = "G2";
 
 			// scanning for fixed regex
-			Map<String, String> regexmatchmap = scanning(sentence.getOriginalSentence());
+
 
 				int index = entry.getKey().toString().indexOf("_");
 				String techNo = entry.getKey().toString().substring(0, index);
@@ -443,25 +444,51 @@ public class OntologyParser implements Comparator<Double>{
 					resultMap = new ArrayList<Map<String,String>>();
 				}
 
-				Map map = new LinkedHashMap();
-			    map.put("count", count);
-		    	map.put("action", threat_action);
-			    map.put("techId", entry.toString().split("_")[0]);
-			    map.put("technique", techniqueData);
-			    map.put("tactic", tacticData);
 
-				resultMap.add(map);
+				String id=entry.toString().split("_")[0];
+
+				if(!map.containsKey(id)){
+					Technique technique = new Technique();
+					technique.setAction(threat_action);
+					technique.setTactic(tacticData);
+					technique.setTechId(entry.toString().split("_")[0]);
+					technique.setTechnique(techniqueData);
+					technique.setCount(1);
+					map.put(id,technique);
+					if(firstTech==null)
+						firstTech=technique;
+				} else {
+					Technique technique =map.get(id);
+					technique.setCount(technique.getCount()+1);
+				}
 
 
 			   count++;
-			   if(count==3)break;
+			   if(count==5)break;
 
 		}
-		System.out.println(resultMap);
+		if(result==null)result=new LinkedList<>();
+		List<Technique> list= new LinkedList<>();
+		if(map.size()<5){
+			for(String s:map.keySet()){
+				Technique technique =map.get(s);
+				if(technique.getCount()>1)
+					list.add(technique);
+			}
+			if(list.size()==1)list.add(firstTech);
+			result.add(list);
+		//	System.out.println(result);
+		}
+
+
+
+		//resultMap.addAll(countMap(midResultMap));
+
 		if (count==0) { LOGGER.severe(Constants.noResult);
 		LOGGER.severe(Constants.suggestion);
 		System.out.println();}
 	}
+
 
 	/**
 	 * createDocTerms
@@ -580,6 +607,14 @@ public class OntologyParser implements Comparator<Double>{
 
 	public void setResultMap(List<Map<String,String>> resList){
 	    this.resultMap = resList;
+	}
+
+	public static List<List<Technique>> getResult() {
+		return result;
+	}
+
+	public static void setResult(List<List<Technique>> result) {
+		OntologyParser.result = result;
 	}
 }
 	

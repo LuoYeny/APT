@@ -16,6 +16,7 @@ public class Mapping {
         configMap.put("1","1");
         OntologyParser op = OntologyParser.getInstance(ontologyList,configMap);
         OntologyParser.use_nlp_to_load(text);
+        System.out.println(OntologyParser.getResult());
     }
 
     public static void main(String[] args) {

@@ -100,11 +100,28 @@ public class NLPCoreExtractor {
 
             }
             if(relation.contains("compound")){
+
+                if(edge.getSource().word().trim().equals(nsubj)){
+                    nsubj=edge.getTarget().word().trim()+" "+nsubj;
+
+                }
                 if(edge.getSource().word().trim().equals(obj)
                         &&edge.getSource().word().trim().
                         equals(list.get(list.size()-1).getObj())){
                     Action action =list.get(list.size()-1);
                     action.setCompound(edge.getTarget().word().trim());
+
+                }
+
+
+            }
+            if(relation.contains("amod")){
+                if(edge.getSource().word().trim().equals(obj)
+                        &&edge.getSource().word().trim().
+                        equals(list.get(list.size()-1).getObj())){
+                    Action action =list.get(list.size()-1);
+                    action.setAmod(edge.getTarget().word().trim());
+
 
                 }
 
