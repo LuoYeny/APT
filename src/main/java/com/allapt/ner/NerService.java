@@ -55,7 +55,7 @@ public class NerService {
 
 
     public static void main(String[] args) {
-       String text= TextUtill.readFileContent("src/main/resources/text/2.txt");
+       String text= TextUtill.readFileContent("src/main/resources/text/43.txt");
         System.out.println(text);
         NerService.init();
        new NerService().doNer(text);
