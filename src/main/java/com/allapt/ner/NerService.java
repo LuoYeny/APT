@@ -23,7 +23,7 @@ public class NerService {
         props.setProperty("coref.algorithm", "neural");
         // build pipeline
         props.setProperty("ner.useSUTime", "false");
-     //  props.setProperty("ner.model","models/apt1-model.ser.gz");
+       props.setProperty("ner.model","models/apt1-model.ser.gz");
         StanfordCoreNLP pipeline = new StanfordCoreNLP(props);
         // create a document object
 
