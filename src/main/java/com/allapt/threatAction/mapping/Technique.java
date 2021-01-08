@@ -8,6 +8,7 @@ public class Technique {
     private String techId;
     private String technique;
     private String tactic;
+    private String score;
     private int count;
 
     public String getAction() {
@@ -42,6 +43,14 @@ public class Technique {
         this.tactic = tactic;
     }
 
+    public String getScore() {
+        return score;
+    }
+
+    public void setScore(String score) {
+        this.score = score;
+    }
+
     public int getCount() {
         return count;
     }
@@ -57,6 +66,7 @@ public class Technique {
                 ", techId='" + techId + '\'' +
                 ", technique='" + technique + '\'' +
                 ", tactic='" + tactic + '\'' +
+                ", socre='" + score + '\'' +
                 '}';
     }
 

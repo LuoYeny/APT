@@ -12,7 +12,7 @@ public class OntologyList {
         List<SecurityThreatCategory> list = new ArrayList<>();
         File dir = new File("D:\\myJava\\allApt\\src\\main\\resources\\app\\ttpdrill\\ontology");
         BufferedReader br = null;
-        System.out.println("dir  " + dir);
+      //  System.out.println("dir  " + dir);
         File[] directoryListing = dir.listFiles();
         try {
             if (directoryListing != null) {

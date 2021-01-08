@@ -3,6 +3,7 @@ package com.allapt.nlp;
 
 import com.allapt.nlp.preProcess.NLPCoreExtractor;
 import com.allapt.nlp.preProcess.TextPreprocessor;
+import com.allapt.util.TextUtill;
 import edu.stanford.nlp.ling.CoreAnnotations;
 import edu.stanford.nlp.ling.CoreLabel;
 import edu.stanford.nlp.ling.IndexedWord;
@@ -46,6 +47,8 @@ public class StanfordParseTest {
         String text8="These attacks were carried out using spear-phishing attacks against the target organizations, using messages related to diplomatic discussions in the Asia-Pacific region.\n" +
                 "\n" +
                 "The spear-phishing email contains a malicious document as an attachment, which exploits CVE-2012-0158, a dated vulnerability in Windows common control. This vulnerability was also used in other targeted attacks, most recently the “Safe” campaign that compromised several government agencies, media outlets and other institutions.";
-        System.out.println(new StanfordParseTest().doIdentification(text8));
+        String text9= TextUtill.readFileContent("src/main/resources/text/1.txt");
+
+        System.out.println(new StanfordParseTest().doIdentification(text9));
     }
 }

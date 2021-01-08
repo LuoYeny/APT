@@ -58,7 +58,7 @@ public class TTPDrill_BM25 {
 		try {
 
 			File dir = new File(inputP);
-			System.out.println("dir  "+dir);
+		//	System.out.println("dir  "+dir);
 			File[] directoryListing = dir.listFiles();
 			if (directoryListing != null) {
 				for (File child : directoryListing) {

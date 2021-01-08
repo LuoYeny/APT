@@ -2,6 +2,7 @@ package com.allapt.threatAction.mapping;
 
 
 import com.allapt.threatAction.identification.IdentifyService;
+import com.allapt.util.TextUtill;
 import org.springframework.stereotype.Service;
 
 import java.util.HashMap;
@@ -14,9 +15,9 @@ public class Mapping {
         System.out.println(ontologyList.size());
         HashMap configMap = new HashMap();
         configMap.put("1","1");
-        OntologyParser op = OntologyParser.getInstance(ontologyList,configMap);
+        OntologyParser.getInstance(ontologyList,configMap);
         OntologyParser.use_nlp_to_load(text);
-        System.out.println(OntologyParser.getResult());
+       // System.out.println(OntologyParser.getResult());
     }
 
     public static void main(String[] args) {
@@ -27,9 +28,12 @@ public class Mapping {
         String text5="These attacks were carried out using spear-phishing attacks against the target organizations, using messages related to diplomatic discussions in the Asia-Pacific region.\n" +
                 "\n" +
                 "The spear-phishing email contains a malicious document as an attachment, which exploits CVE-2012-0158, a dated vulnerability in Windows common control. This vulnerability was also used in other targeted attacks, most recently the “Safe” campaign that compromised several government agencies, media outlets and other institutions.";
-        List<String> strings = new IdentifyService().doIdentification(text5);
+        String text6= TextUtill.readFileContent("src/main/resources/text/1.txt");
+        List<String> strings = new IdentifyService().doIdentification(text);
          for(String s:strings)
         new Mapping().doMapping(s);
+
+        System.out.println(OntologyParser.getResult());
     }
 }
 

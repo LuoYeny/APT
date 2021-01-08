@@ -89,34 +89,7 @@ public class OntologyParser implements Comparator<Double>{
 
 
 
-	public void use_word_spacing(String inputReport) {
-		// inputReport aka sentence
-		TreeMap<String, Double> tmap = new TreeMap<>();
-		TreeMap<String, HashMap<String,Integer>> tmapContent = new TreeMap<>();
-		double score = 0;
-		int counter =0;
-		BreakIterator iterator = BreakIterator.getSentenceInstance(Locale.US);
-		iterator.setText(inputReport);
-		int start = iterator.first();
-		for (int end = iterator.next();
-			    end != BreakIterator.DONE;
-			    start = end, end = iterator.next()) {
-			String text = inputReport.substring(start,end).trim();
-			Sentence sent = new Sentence();
-			sent.setOriginalSentence(text);
-			++counter;
-			for (Document_Terms dt: Ontology_doc_terms) {
-				score = TTPDrill_BM25.Calculate_BM25_Similarity_bagofwords_ankit(
-						Utilities.convertSentencetoDocument(text),
-						dt, bagswords, true, totalDocs, avgDocLength);
-					if (score>0.1) {
-						tmap.put(dt.ID, score);
-						tmapContent.put(dt.ID, dt.term_freq_hmap);
-//						System.out.println(dt.ID + " - "+ score);
-					}
-			}printResults(counter, sent, "", tmap, tmapContent);
-		}
-	}
+
 
 	public static void queryOntology(Sentence sent, String threat_action,  Document_Terms... document_Terms) {
 //		System.out.println("Ghaith -- querying the ontology -- ontologyparser");
@@ -131,7 +104,7 @@ public class OntologyParser implements Comparator<Double>{
 					tmap.put(dt.ID, score);
 					tmapContent.put(dt.ID, dt.term_freq_hmap);
 				}
-			}printResults(0, sent, threat_action, tmap, tmapContent);
+			}printResults(sent, threat_action, tmap, tmapContent);
 	}
 
 	/**
@@ -146,7 +119,7 @@ public class OntologyParser implements Comparator<Double>{
 				TreeMap<String, Double> tmap = new TreeMap<>();
 				TreeMap<String, HashMap<String,Integer>> tmapContent = new TreeMap<>();
 				String text = sentence ;
-			System.out.println("text "+text);
+
 				Sentence sent = new Sentence();
 				sent.setOriginalSentence(text);
 //			    System.out.println("use_nlp_to_load -- text before nlp" + text);
@@ -170,20 +143,26 @@ public class OntologyParser implements Comparator<Double>{
 		}
 
 			      /// start looking in the ontology
-			System.out.println("for score  ...");
+		//	System.out.println("for score  ...");
 				for (Document_Terms dt: Ontology_doc_terms) {
 					// extract 3 files, goal1, goal2 and verb_action
 
 					score = TTPDrill_BM25.Calculate_BM25_Similarity_bagofwords_ankit(TA, dt, bagswords, true,
 					totalDocs, avgDocLength);
 				//	System.out.println("score1  "+score);
-					if (score>0.1) {
+					if (score>5) {
 						tmap.put(dt.ID, score);
+
+					//	System.out.println("dt.ID "+dt.ID);
 						tmapContent.put(dt.ID, dt.term_freq_hmap);
 						//System.out.println("TA "+TA+" dt.ID"+dt.ID+" score "+score);
 					}
 					}
-				printResults(counter, sent, text, tmap, tmapContent);
+				if(tmap.size()!=0){
+					//System.out.println(strings);
+					printResults( sent, text, tmap, tmapContent);
+				}
+
 		}
 
 
@@ -213,7 +192,7 @@ public class OntologyParser implements Comparator<Double>{
 //					fis.close();
 
 					String str = securityThreatCategory.getName(); //new String(data, "UTF-8"); // str return ontology file content
-					System.out.println("str    " +str);
+					//System.out.println("str    " +str);
 					if(str==null) continue;
 					String[] words = str.split(Constants.space); // words split that with space and keep in words array
 					Document_Terms dt = new Document_Terms(filename); // dt created with file name
@@ -231,9 +210,9 @@ public class OntologyParser implements Comparator<Double>{
 					} else if (filename.contains(Constants.G2_suffix)) {
 						dt_obj_G2.add(dt);
 					}
-					System.out.println("Map1 size : " + dt_obj_TA.size());
-					System.out.println("Map2 size : " + dt_obj_G1.size());
-					System.out.println("Map3 size : " + dt_obj_G2.size());
+				//	System.out.println("Map1 size : " + dt_obj_TA.size());
+				//	System.out.println("Map2 size : " + dt_obj_G1.size());
+				//	System.out.println("Map3 size : " + dt_obj_G2.size());
 				}
 			}
 
@@ -393,22 +372,16 @@ public class OntologyParser implements Comparator<Double>{
 	/**
 	 *
 	 */
-	private static void printResults(int counter, Sentence sentence, String threat_action, TreeMap<String, Double> tmap, TreeMap<String,HashMap<String,Integer>> tmapContent) {
-		System.out.println("printResults  -----");
+	private static void printResults(Sentence sentence, String threat_action, TreeMap<String, Double> tmap, TreeMap<String,HashMap<String,Integer>> tmapContent) {
+
 		SortedSet<Entry<String,Double>> hulu = entriesSortedByValues(tmap);
-		System.out.println(hulu);
+		//System.out.println(hulu);
 		int count = 0;
-		String type = "N/A";
 		// get data from configuration table
-		Technique firstTech=null;
-		Map<String, Technique > map =new HashMap<>();
+
+		List<Technique> list= new LinkedList<>();
 		for(Entry<String,Double> entry: hulu) {
-			if (entry.getKey().contains("_TA"))
-				type = "TA";
-			if (entry.getKey().contains("_G1"))
-				type = "G1";
-			if (entry.getKey().contains("_G2"))
-				type = "G2";
+
 
 			// scanning for fixed regex
 
@@ -416,9 +389,6 @@ public class OntologyParser implements Comparator<Double>{
 				int index = entry.getKey().toString().indexOf("_");
 				String techNo = entry.getKey().toString().substring(0, index);
 				String techName = Utilities.convertTechIDtoTechName(techNo);
-				String result = sentence.getStartPos() + ","+ sentence.getEndPos() + ","+ threat_action + ","
-						+ sentence.getOriginalSentence()+","+type+ ","+ tmapContent.get(entry.getKey())
-						+","+entry+ ","+techName;
 				String techniqueData = "";
 				try {
 					techniqueData = techName.split(",")[0];
@@ -434,51 +404,53 @@ public class OntologyParser implements Comparator<Double>{
 				}
 
 
-				if (resultList == null) {
-					resultList = new ArrayList<String>();
-				}
-				resultList.add(result);
 
-				// Creating a hashmap
-				if (resultMap == null) {
-					resultMap = new ArrayList<Map<String,String>>();
-				}
+
+
 
 
 				String id=entry.toString().split("_")[0];
 
-				if(!map.containsKey(id)){
+//				if(!map.containsKey(id)){
+//					Technique technique = new Technique();
+//					technique.setAction(threat_action);
+//					technique.setTactic(tacticData);
+//					technique.setTechId(entry.toString().split("_")[0]);
+//					technique.setTechnique(techniqueData);
+//					 technique.setScore(entry.getValue().toString());
+//
+//					technique.setCount(1);
+//					map.put(id,technique);
+//					if(firstTech==null)
+//						firstTech=technique;
+//				} else {
+//					Technique technique =map.get(id);
+//					technique.setCount(technique.getCount()+1);
+//				}
 					Technique technique = new Technique();
 					technique.setAction(threat_action);
 					technique.setTactic(tacticData);
 					technique.setTechId(entry.toString().split("_")[0]);
 					technique.setTechnique(techniqueData);
-					technique.setCount(1);
-					map.put(id,technique);
-					if(firstTech==null)
-						firstTech=technique;
-				} else {
-					Technique technique =map.get(id);
-					technique.setCount(technique.getCount()+1);
-				}
-
+					technique.setScore(entry.getValue().toString());
+					list.add(technique);
 
 			   count++;
 			   if(count==5)break;
 
 		}
 		if(result==null)result=new LinkedList<>();
-		List<Technique> list= new LinkedList<>();
-		if(map.size()<5){
-			for(String s:map.keySet()){
-				Technique technique =map.get(s);
-				if(technique.getCount()>1)
-					list.add(technique);
-			}
-			if(list.size()==1)list.add(firstTech);
+//		List<Technique> list= new LinkedList<>();
+//		if(map.size()<5){
+//			for(String s:map.keySet()){
+//				Technique technique =map.get(s);
+//				if(technique.getCount()>1)
+//					list.add(technique);
+//			}
+//			if(list.size()==1)list.add(firstTech);
 			result.add(list);
 		//	System.out.println(result);
-		}
+//		}
 
 
 
@@ -505,96 +477,6 @@ public class OntologyParser implements Comparator<Double>{
 	}
 
 
-	// Below method for manual extraction using nlp rules
-	void use_manual_nlp_rules_extract(String text, boolean onlyPrintEdgesFlag,
-			boolean writeToFileFlag) {
-		//Utilti
-		List<Sentence> sentenceList = Utilities.breakText(text);
-
-		// Creating a hashmap
-		if (resultMap == null) {
-			resultMap = new ArrayList<Map<String,String>>();
-		}
-
-		for (int i=0; i <sentenceList.size(); i++) {
-			String x = sentenceList.get(i).getOriginalSentence();
-			// Step 1: Extracting basis scanning of fixed keywords like powershell
-
-
-			Map<String, String> map = scanning(x);
-
-			for (String name: map.keySet()){
-	            String key =name.toString();
-	            String value = map.get(name).toString();
-//	            System.out.println(key + " " + value);
-
-
-
-	            String techAndTacticName = Utilities.convertTechIDtoTechName(value);
-	            String techniqueData = "";
-				try {
-					techniqueData = techAndTacticName.split(",")[0];
-				} catch (Exception techniqueEx) {
-					techniqueData = "";
-				}
-
-				String tacticData = "";
-				try {
-					tacticData = techAndTacticName.split(",")[1];
-				} catch (Exception tacticEx) {
-					tacticData = "";
-				}
-
-				Map mapEntry = new LinkedHashMap();
-				Map<String,String> innerMap = new HashMap<String,String>();
-				mapEntry.put("serial", 1);
-				mapEntry.put("subSerial", null);
-				mapEntry.put("typeOfAction", "s");
-				mapEntry.put("original_sentence", x);
-
-				innerMap = new HashMap();
-				innerMap.put("description", "");
-				innerMap.put("data", key);
-				// for cve
-				if (value.equalsIgnoreCase("T1068")) {
-					innerMap.put("link", "https://nvd.nist.gov/vuln/detail/" + key);
-				} else {
-					innerMap.put("link", "https://attack.mitre.org/techniques/" + value);
-				}
-				innerMap.put("highlight", key);
-				mapEntry.put("action", innerMap);
-
-				String techName = key;
-				innerMap = new HashMap();
-				innerMap.put("description", "");
-				//innerMap.put("data", techName.split(",")[0]);
-				innerMap.put("data", value);
-				// for cve
-				if (value.equalsIgnoreCase("T1068")) {
-					innerMap.put("link", "https://nvd.nist.gov/vuln/detail/" + key);
-				} else {
-					innerMap.put("link", "https://attack.mitre.org/techniques/" + value);
-				}
-				mapEntry.put("techId", innerMap);
-
-				innerMap = new HashMap();
-				innerMap.put("description", "");
-				innerMap.put("data", techniqueData);
-				//innerMap.put("link", entry.toString());
-				innerMap.put("link","");
-				mapEntry.put("technique", innerMap);
-
-				innerMap = new HashMap();
-				innerMap.put("description", "");
-				innerMap.put("data", tacticData);
-				innerMap.put("link", "");
-				mapEntry.put("tactic", innerMap);
-				resultMap.add(mapEntry);
-			}
-			// Step 2: Extracting on basis of rules
-			new RelationExtractor(sentenceList.get(i), onlyPrintEdgesFlag, writeToFileFlag);
-		}
-	}
 
 	public ArrayList<String> getResultList(){
 		return resultList;

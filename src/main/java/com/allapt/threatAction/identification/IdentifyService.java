@@ -1,6 +1,7 @@
 package com.allapt.threatAction.identification;
 
 
+import com.allapt.util.TextUtill;
 import edu.stanford.nlp.pipeline.StanfordCoreNLP;
 import org.springframework.stereotype.Service;
 
@@ -19,5 +20,11 @@ public class IdentifyService {
         List<String> results=coreExtractor.extractActionTreeBasedApproach(text);
         return  results;
 
+    }
+
+    public static void main(String[] args) {
+        String text= TextUtill.readFileContent("src/main/resources/text/1.txt");
+
+        System.out.println(new IdentifyService().doIdentification(text));
     }
 }
